@@ -37,35 +37,15 @@ data retrieval, including filtering by genre, release year, and actor.
    ```bash
    cd movies-api
    ```
-3. Run **Spring Initializr** with dependencies for Spring Web and Spring Data JPA if starting from scratch.
-4. Update your `application.properties` to configure the SQLite database:
-   ```properties
-   spring.datasource.url=jdbc:sqlite:movies.db
-   spring.datasource.driver-class-name=org.sqlite.JDBC
-   spring.jpa.hibernate.ddl-auto=update
-   ```
-5. Add the **SQLite JDBC driver** dependency to your `pom.xml`:
-   ```xml
-   <dependency>
-       <groupId>org.xerial</groupId>
-       <artifactId>sqlite-jdbc</artifactId>
-       <version>3.36.0.3</version>
-   </dependency>
-   ```
-
-### Building the Project
-To build the project, run:
-```bash
-mvn clean install
-```
-
-### Running the Application
-To start the server, run:
-```bash
-mvn spring-boot:run
-```
-
-The API will be available at `http://localhost:8080`.
+3. To build the project, run:
+    ```bash
+    mvn clean install
+    ```
+4. To start the server, run:
+    ```bash
+    mvn spring-boot:run
+    ```
+5. The API will be available at `http://localhost:8080`.
 
 ## Usage Guide
 
