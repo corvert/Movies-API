@@ -27,20 +27,22 @@ public class MovieService {
     @Autowired
     private ActorRepository actorRepository;
 
-
+    // Adds a new movie to the repository after validating it does not already exist
     @Validated
     public Movie addMovie(@Valid Movie movie) throws BadRequestException {
+        // Check if the movie already exists by title
         if (movieRepository.findByMovieTitle(movie.getMovieTitle()).isPresent()) {
             throw new BadRequestException("Movie already exists: " + movie.getMovieTitle());
         }
 
 
-        // Process genres and actors
+        // Process genres and actors to ensure they are persisted and linked correctly
         movie.setGenreSet(processGenres(movie.getGenreSet()));
         movie.setActorSet(processActors(movie.getActorSet()));
         return movieRepository.save(movie);
     }
 
+    // Process genres to ensure they are persisted and linked correctly
     private Set<Genre> processGenres(Set<Genre> genres) {
         return genres.stream()
                 .map(genre -> {
@@ -56,6 +58,7 @@ public class MovieService {
                 .collect(Collectors.toSet());
     }
 
+    // Process actors to ensure they are persisted and linked correctly
     private Set<Actor> processActors(Set<Actor> actors) {
         return actors.stream()
                 .map(actor -> {
@@ -72,17 +75,21 @@ public class MovieService {
     }
 
 
+    // Retrieves all movies sorted by title
     public List<Movie> getAllMovies() {
         return movieRepository.findAll().stream()
                 .sorted(Comparator.comparing(m -> m.getMovieTitle().toLowerCase()))
                 .collect(Collectors.toList());
     }
 
+    // Finds a movie by its ID, throwing an exception if not found
     public Movie findMovieById(Long movieId) {
         return movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie with id " + movieId + " does not exist"));
     }
 
+
+    // Finds movies by genre name, throwing an exception if none exist
     public List<Movie> findMoviesByGenre(String genreName) {
         Genre genre = genreRepository.findByGenreName(genreName).orElseThrow(() -> new ResourceNotFoundException(
                 "Genre with name '" + genreName + "' does not exists"
@@ -95,6 +102,7 @@ public class MovieService {
     }
 
 
+    // Finds movies by their release year, throwing an exception if none exist
     public List<Movie> findMoviesByReleaseYear(Long releaseYear) {
         boolean yearExits = movieRepository.existsByReleaseYear(releaseYear);
         if (!yearExits) {
@@ -104,6 +112,7 @@ public class MovieService {
         return movieRepository.findByReleaseYear(releaseYear);
     }
 
+    // Retrieves actors associated with a specific movie, throwing an exception if none exist
     public Set<Actor> findActorsByMovie(Long movieId) {
         boolean idExists = movieRepository.existsById(movieId);
         if (!idExists) {
@@ -117,16 +126,19 @@ public class MovieService {
         return actorSet;
     }
 
+    // Updates a movie's details, handling title, release year, duration, genres, and actors
     public Movie updateMovie(Long movieId, String movieTitle, Integer releaseYear, Float duration,
                              Set<Genre> genreSet, Set<Actor> actorSet, Set<Actor> actorsToRemove, Set<Genre> genresToRemove) throws BadRequestException {
+        // Retrieve the existing movie or throw an exception if not found
         Movie movie = movieRepository.findById(movieId).orElseThrow(() ->
                 new ResourceNotFoundException("Movie with id " + movieId + " does not exist"));
+        // Check for duplicate movie title (excluding the current movie)
         List<Movie> movies = movieRepository.findByMovieTitleAndMovieIdNot(movieTitle, movieId);
         if (!movies.isEmpty()) {
             throw new BadRequestException("Movie with name '" + movieTitle + "' already exists");
         }
-        boolean isUpdated = false;
-        // Update movie title
+        boolean isUpdated = false;// Flag to track if any updates were made
+        // Update movie title if provided and different from existing
         if (movieTitle != null && movieTitle.length() > 0 && !Objects.equals(movie.getMovieTitle(), movieTitle)) {
             movie.setMovieTitle(movieTitle);
             isUpdated = true;
@@ -160,6 +172,7 @@ public class MovieService {
 
     }
 
+    // Removes specified genres from the movie's genre set, returning true if updated
     private static boolean removeGenres(Set<Genre> genresToRemove, Movie movie, boolean isUpdated) {
         if (genresToRemove != null && !genresToRemove.isEmpty()) {
             Set<Genre> existingGenres = movie.getGenreSet();
@@ -174,9 +187,11 @@ public class MovieService {
         return isUpdated;
     }
 
+    // Removes specified actors from the movie's actor set, returning true if updated
     private static boolean removeActors(Set<Actor> actorsToRemove, Movie movie, boolean isUpdated) {
         if (actorsToRemove != null && !actorsToRemove.isEmpty()) {
             Set<Actor> existingActors = movie.getActorSet();
+            // Remove genres that match either by ID or name
             for (Actor actorToRemove : actorsToRemove) {
                 existingActors.removeIf(existingActor ->
                         Objects.equals(existingActor.getActorId(), actorToRemove.getActorId()) ||
@@ -188,9 +203,11 @@ public class MovieService {
         return isUpdated;
     }
 
+    // Adds specified actors to the movie's actor set, ensuring they exist in the repository
     private boolean addActors(Set<Actor> actorSet, Movie movie, boolean isUpdated) {
         if (actorSet != null && !actorSet.isEmpty()) {
             Set<Actor> existingActors = movie.getActorSet();
+            // Remove actors that match either by ID or name
             for (Actor actor : actorSet) {
                 Actor existingActor = null;
                 // Check by ID if provided
@@ -223,6 +240,7 @@ public class MovieService {
         return isUpdated;
     }
 
+    // Adds specified genres to the movie's genreSet, ensuring they exist in the repository
     private boolean addGenres(Set<Genre> genreSet, Movie movie, boolean isUpdated) {
         if (genreSet != null && !genreSet.isEmpty()) {
             Set<Genre> existingGenres = movie.getGenreSet();
@@ -243,12 +261,13 @@ public class MovieService {
                     if (genreByNameOptional.isPresent()) {
                         existingGenre = genreByNameOptional.get();
                     } else {
-                        // throw new ResourceNotFoundException("Genre with name " + genre.getGenreName() + " does not exist");
+                        // Create and save a new genre if not found
                         existingGenre = new Genre();
                         existingGenre.setGenreName(genre.getGenreName());
                         genreRepository.save(existingGenre);
                     }
                 }
+                // Create and save a new genre if not found
                 if (existingGenre != null) {
                     existingGenres.add(existingGenre);
                 }
@@ -259,6 +278,7 @@ public class MovieService {
         return isUpdated;
     }
 
+    // Retrieves movies associated with a specific genre ID, throwing an exception if none exist
     public Set<Movie> getMoviesByGenreId(Long genreId) {
         Genre genre = genreRepository.findById(genreId).orElseThrow(() -> new ResourceNotFoundException(
                 "Genre with ID " + genreId + " does not exists"
@@ -270,39 +290,48 @@ public class MovieService {
         return movieRepository.findMoviesByGenreId(genreId);
     }
 
+    // Deletes a movie by its ID, checking for associated actors and genres unless forced
     public void deleteMovie(Long movieId, boolean force) throws BadRequestException {
         boolean exists = movieRepository.existsById(movieId);
         if (!exists) {
             throw new ResourceNotFoundException("Movie with id '" + movieId + "' does not exist");
         }
+        // Count associated actors and genres
         int associatedActorCount = actorRepository.countActorsByMovieId(movieId);
         int associatedGenreCount = genreRepository.countGenresByMovieId(movieId);
+        // Prevent deletion if there are associated actors or genres unless forced
         if ((associatedActorCount > 0 || associatedGenreCount > 0) && !force) {
             throw new BadRequestException("Cannot delete movie "
                     + movieRepository.findById(movieId).get().getMovieTitle() +
                     " becasue it has " + associatedActorCount + " associated actors and " +
                     associatedGenreCount + " associated genres");
         } else {
+            // Remove associations and delete the movie
             removeActors(movieId);
             removeGenres(movieId);
             movieRepository.deleteById(movieId);
         }
     }
 
+    // Removes genres associated with a movie from their respective sets
     private void removeGenres(Long movieId) {
         Set<Genre> genres = genreRepository.findGenresByMovieId(movieId);
         for (Genre genre : genres) {
+            // Remove the movie from the genre's movie set
             genre.getMovieSet().removeIf(movie -> movie.getMovieId().equals(movieId));
         }
     }
 
+    // Removes actors associated with a movie from their respective sets
     private void removeActors(Long movieId) {
         Set<Actor> actors = actorRepository.findActorsByMovieId(movieId);
+        // Remove the movie from the actor's movie set
         for (Actor actor : actors) {
             actor.getMovieSet().removeIf(movie -> movie.getMovieId().equals(movieId));
         }
     }
 
+    // Finds movies by a partial name and throws an exception if none found
     public Set<Movie> findMoviesByPartialName(String someName) {
         System.out.println("Searching for movies with name: " + someName);
         Set<Movie> movieSet = movieRepository.findByPartialMovieTitle(someName);
