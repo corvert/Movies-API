@@ -61,7 +61,7 @@ public class ActorService {
     }
 
     // Updates an existing actor's details
-    public void updateActor(Long actorId, String actorName, LocalDate birthDate, Set<Movie> movieSet) throws BadRequestException {
+    public void updateActor(Long actorId, String actorName, String birthDate, Set<Movie> movieSet) throws BadRequestException {
         Actor actor = actorRepository.findById(actorId).orElseThrow(() -> new ResourceNotFoundException(
                 "Actor with id " + actorId + " does not exists"
         ));
