@@ -86,6 +86,7 @@ data retrieval, including filtering by genre, release year, and actor.
      {"genreName":  "Sci-Fi Epic"},
      {"genreName":  "Action"},
      {"genreName":  "Adventure"},
+      //Adding gerne with ID
      {"genreId":  11}
   ],
   "actorSet": [
@@ -94,7 +95,9 @@ data retrieval, including filtering by genre, release year, and actor.
      {"actorName":  "Elliot Page", "birthDate":  "1987-02-21"},
      {"actorName":  "Ken Watanabe", "birthDate":  "1959-10-21"},
      {"actorName":  "Tom Hardy", "birthDate":  "1977-09-15"},
-     {"actorName":  "Dileep Rao", "birthDate":  "1973-07-29"},
+      //If actor already exists in database You can add new actor only with name
+     {"actorName":  "Dileep Rao"},
+      //Adding actor with ID
      {"actorId":  12}
   ]
 }
