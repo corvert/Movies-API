@@ -109,7 +109,7 @@ data retrieval, including filtering by genre, release year, and actor.
 - **Search by Title:** `GET /api/movie/search/{someName}`
 - **Get Actors in a Movie:** `GET /api/movie/{movieId}/actors`
 - **Update Movie:** `PATCH /api/movie/update/{movieId}`
--   - #### Example JSON for PATCH
+   - #### Example JSON for PATCH
 ```json
 {
   "movieTitle": "Inception",
